@@ -1,0 +1,17 @@
+# Next.js 대시보드 production 서버 (systemd user unit)
+# 설치: systemctl --user link ~/sta-iot-dashboard/infra/sta-web.service && systemctl --user enable --now sta-web
+# 로그인 없이 부팅 시 시작: sudo loginctl enable-linger $USER
+# .env.local을 바꾸면 npm run build 후 systemctl --user restart sta-web
+[Unit]
+Description=STA Sensor Dashboard (Next.js)
+After=network-online.target
+
+[Service]
+WorkingDirectory=%h/sta-iot-dashboard/web
+Environment=PATH=%h/.nvm/versions/node/v24.21.0/bin:/usr/bin:/bin
+ExecStart=%h/.nvm/versions/node/v24.21.0/bin/npm run start -- --hostname 0.0.0.0
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

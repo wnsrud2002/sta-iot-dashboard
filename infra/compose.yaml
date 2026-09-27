@@ -1,0 +1,40 @@
+services:
+  database:
+    build:
+      context: .
+      dockerfile: Dockerfile.postgis
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?Set POSTGRES_DB in .env}
+      POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER in .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    volumes:
+      - postgis_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -d \"$$POSTGRES_DB\" -U \"$$POSTGRES_USER\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  frost:
+    image: ${FROST_IMAGE:?Set FROST_IMAGE in .env}
+    restart: unless-stopped
+    depends_on:
+      database:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      serviceRootUrl: http://${JETSON_IP:?Set JETSON_IP in .env}:8080/FROST-Server
+      http_cors_enable: "true"
+      http_cors_allowed_origins: "http://localhost:3000,http://${JETSON_IP}:3000"
+      http_cors_allowed_methods: "GET,HEAD,OPTIONS"
+      persistence_db_driver: org.postgresql.Driver
+      persistence_db_url: jdbc:postgresql://database:5432/${POSTGRES_DB}
+      persistence_db_username: ${POSTGRES_USER}
+      persistence_db_password: ${POSTGRES_PASSWORD}
+      persistence_autoUpdateDatabase: "true"
+
+volumes:
+  postgis_data:

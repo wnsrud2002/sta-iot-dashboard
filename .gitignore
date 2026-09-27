@@ -1,0 +1,25 @@
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+secrets.h
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+
+# Next.js / Node.js
+node_modules/
+.next/
+out/
+npm-debug.log*
+
+# Editors and OS
+.DS_Store
+.idea/
+.vscode/
+
+# Local backups and logs
+*.dump
+*.log
