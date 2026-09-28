@@ -53,7 +53,7 @@ function range(items: Observation[]) {
   return { min: Math.min(...values), max: Math.max(...values) };
 }
 
-function seriesOptions(colors: Colors, unit: string, items: Observation[]): ChartOptions<"line"> {
+function seriesOptions(colors: Colors, unit: string, digits: number, items: Observation[]): ChartOptions<"line"> {
   const first = items[0], last = items.at(-1);
   return {
     responsive: true,
@@ -78,7 +78,7 @@ function seriesOptions(colors: Colors, unit: string, items: Observation[]): Char
       y: {
         grid: { color: colors.rule },
         border: { display: false },
-        ticks: { color: colors.muted, maxTicksLimit: 5, callback: (value) => `${value}${unit}` },
+        ticks: { color: colors.muted, maxTicksLimit: 5, callback: (value) => `${+Number(value).toFixed(2)}${unit}` },
       },
     },
     plugins: {
@@ -88,7 +88,7 @@ function seriesOptions(colors: Colors, unit: string, items: Observation[]): Char
             const time = items[0]?.parsed.x;
             return time == null ? "" : new Date(time).toLocaleTimeString("ko-KR");
           },
-          label: (item) => `${item.parsed.y}${unit}`,
+          label: (item) => `${item.parsed.y?.toFixed(digits)}${unit}`,
         },
       },
     },
@@ -125,7 +125,7 @@ function ComfortChart({ temperature, humidity }: { temperature: Observation[]; h
 
   return (
     <figure className="comfort">
-      <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={current ? `현재 ${current[0]}°C, ${current[1]}%. 최근 30분 변화 경로 포함` : "데이터 없음"}>
+      <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={current ? `현재 ${current[0].toFixed(1)}°C, ${Math.round(current[1])}%. 최근 30분 변화 경로 포함` : "데이터 없음"}>
         {[14, 17, 20, 23, 26, 29, 32].map((t) => (
           <g key={`t${t}`}>
             <line className="grid" x1={x(t)} x2={x(t)} y1={P.t} y2={H - P.b} />
@@ -251,7 +251,7 @@ export default function Dashboard() {
             <div className="h">
               <dt>습도</dt>
               <dd>{h ? Math.round(h.result) : "–"}<small>%</small></dd>
-              {hRange && <p className="range">30분 {hRange.min}–{hRange.max}%</p>}
+              {hRange && <p className="range">30분 {Math.round(hRange.min)}–{Math.round(hRange.max)}%</p>}
             </div>
           </dl>
         </div>
@@ -264,13 +264,13 @@ export default function Dashboard() {
           <div>
             <h3>온도</h3>
             <div className="plot">
-              <Line options={seriesOptions(colors, "°", temperature)} data={seriesData(temperature, colors.temp)} role="img" aria-label="최근 30분 온도 그래프" />
+              <Line options={seriesOptions(colors, "°", 1, temperature)} data={seriesData(temperature, colors.temp)} role="img" aria-label="최근 30분 온도 그래프" />
             </div>
           </div>
           <div>
             <h3>습도</h3>
             <div className="plot">
-              <Line options={seriesOptions(colors, "%", humidity)} data={seriesData(humidity, colors.hum)} role="img" aria-label="최근 30분 습도 그래프" />
+              <Line options={seriesOptions(colors, "%", 0, humidity)} data={seriesData(humidity, colors.hum)} role="img" aria-label="최근 30분 습도 그래프" />
             </div>
           </div>
         </div>
