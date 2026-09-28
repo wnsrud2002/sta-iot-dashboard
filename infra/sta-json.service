@@ -1,0 +1,14 @@
+# 새 측정값을 실시간으로 ~/sta-backups/json/*.json 에 붙이는 서비스 (systemd user unit)
+# 설치: systemctl --user link ~/sta-iot-dashboard/infra/sta-json.service && systemctl --user enable --now sta-json
+# 로그: journalctl --user -u sta-json -f
+[Unit]
+Description=STA Observations to daily JSON files
+After=network-online.target
+
+[Service]
+ExecStart=%h/sta-iot-dashboard/infra/stream_json.sh
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target

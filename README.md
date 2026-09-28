@@ -144,6 +144,7 @@ npm run build
 | 항목 | 설정 |
 |---|---|
 | DB 백업 | `infra/backup.sh` — cron으로 매일 03:00 `~/sta-backups`에 `pg_dump -Fc`, 14일 보관 |
+| 실시간 JSON | `infra/stream_json.sh` — systemd user unit `sta-json`이 2초마다 새 측정값을 `~/sta-backups/json/YYYY-MM-DD.json`(한국 날짜) 배열 끝에 추가. 재시작해도 `.last_id`부터 이어 받음 |
 | 웹 자동 실행 | `infra/sta-web.service` (systemd user, 실패 시 5초 후 재시작) |
 | 원격 접속 | 웹의 `/sta/*`를 Next rewrites로 Jetson 내부 FROST(`localhost:8080`)에 전달 → 3000 포트 하나로 LAN·Tailscale(`http://TAILSCALE_IP:3000`) 모두 접속 |
 | 컨테이너 | Compose `restart: unless-stopped` |
