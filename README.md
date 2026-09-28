@@ -8,9 +8,30 @@ ESP32 + DHT11로 측정한 온도·습도를 Wi-Fi로 **OGC SensorThings API(STA
 
 - ESP32가 DHT11을 2초마다 읽어 값 범위를 검증하고, NTP로 맞춘 UTC 시각을 붙여 STA `Observation`으로 직접 POST한다. 중간 수집 서버가 없다.
 - Jetson Orin Nano에서 FROST-Server와 PostgreSQL/PostGIS를 Docker Compose로 실행한다.
-- 웹은 STA REST API를 5초마다 조회해 최신값 카드와 최근 60개 시계열 그래프를 그린다.
+- 웹은 STA REST API를 5초마다 조회해 현재 온습도, 쾌적도 차트, 최근 30분 그래프를 그린다.
+- 새 측정값은 날짜별 JSON 파일(`~/sta-backups/json/`)에도 실시간으로 쌓인다.
 
 전체 구축 과정은 [sta_iot_dashboard_full_guide_esp.md](sta_iot_dashboard_full_guide_esp.md)에 단계별로 정리되어 있다.
+
+## STA(SensorThings API)란?
+
+**OGC SensorThings API**는 국제 표준화 기구 OGC가 정한 IoT 센서 데이터 표준이다. "어떤 장치의 어떤 센서가 무엇을 언제 얼마로 쟀는가"를 저장하는 데이터 구조와, 그것을 읽고 쓰는 REST API(JSON) 규칙을 함께 정해 둔다.
+
+**왜 쓰나**
+
+- 센서 쪽과 화면 쪽이 서로를 몰라도 된다. 둘 다 STA 규칙대로만 말하면 되므로 DHT11을 다른 센서로 바꾸거나 대시보드를 Grafana 같은 다른 도구로 바꿔도 나머지는 그대로 둔다.
+- DB 테이블과 API를 직접 설계하지 않는다. FROST-Server 같은 STA 서버가 저장, 조회, 필터(`$filter`), 정렬(`$orderby`), 개수 제한(`$top`)을 표준 문법으로 제공한다.
+- 측정값마다 단위, 센서, 측정 대상 정보가 연결되어 있어 나중에 데이터를 봐도 뜻이 분명하다.
+
+**이 프로젝트에서 STA가 쓰이는 곳**
+
+| 단계 | 파일 | 하는 일 |
+|---|---|---|
+| STA 서버 | `infra/compose.yaml` | FROST-Server(STA 1.1 구현체)와 PostgreSQL 실행 |
+| 데이터 구조 등록 | `infra/create_entities.sh` | Thing, Sensor, ObservedProperty, Datastream 생성 |
+| 보내기 | `esp32/dht11_wifi/dht11_wifi.ino` | 측정할 때마다 `POST /Observations` |
+| 읽기 (웹) | `web/lib/sta.ts` | `GET /Datastreams(id)/Observations`로 최근 값 조회 |
+| 읽기 (JSON 저장) | `infra/stream_json.sh` | 같은 API로 새 측정값을 받아 날짜별 JSON에 추가 |
 
 ## 시스템 아키텍처
 
