@@ -12,6 +12,7 @@ ESP32 + DHT11로 측정한 온도·습도를 Wi-Fi로 **OGC SensorThings API(STA
 - 새 측정값은 날짜별 JSON 파일(`~/sta-backups/json/`)에도 실시간으로 쌓인다.
 
 전체 구축 과정은 [sta_iot_dashboard_full_guide_esp.md](sta_iot_dashboard_full_guide_esp.md)에 단계별로 정리되어 있다.
+STA 중심으로 이 프로젝트에서 공부할 내용은 [docs/STUDY.md](docs/STUDY.md)에 정리되어 있다.
 
 ## STA(SensorThings API)란?
 
