@@ -36,8 +36,10 @@ while true; do
     [ "$n" -eq 0 ] && break
     # 한 줄 = "날짜<TAB>JSON". 같은 시각의 온도·습도는 각각 한 줄씩.
     jq -r --argjson t "$TEMPERATURE_DATASTREAM_ID" --argjson h "$HUMIDITY_DATASTREAM_ID" '.value[] |
-      (.phenomenonTime | sub("\\.[0-9]+"; "") | fromdateiso8601 + 32400 | strftime("%Y-%m-%d")) + "\t" +
-      ({id: .["@iot.id"], time: .phenomenonTime,
+      # FROST는 UTC로 준다. 9시간을 더해 한국 시간(+09:00)으로 바꾼다.
+      (.phenomenonTime | sub("\\.[0-9]+"; "") | fromdateiso8601 + 32400) as $kst |
+      ($kst | strftime("%Y-%m-%d")) + "\t" +
+      ({id: .["@iot.id"], time: ($kst | strftime("%Y-%m-%dT%H:%M:%S+09:00")),
         type: (if .Datastream["@iot.id"] == $t then "temperature_c" elif .Datastream["@iot.id"] == $h then "humidity_pct" else "datastream_\(.Datastream["@iot.id"])" end),
         value: .result} | tojson)' <<<"$page" |
     while IFS=$'\t' read -r day line; do append "$OUT_DIR/$day.json" "$line"; done
